@@ -1,16 +1,12 @@
-import numpy as np
 import random
-import turtle
 import time
 from vector import *
 from mesh import *
+import window
+from lights import Point_light
 import os
 
-true = True
-false = False
-
 os.system('cls')
-
 
 def makeTree(m, pos=Vector(0, -2, 0), size=2, a=0, f=0):
 	p = pos.copy()
@@ -42,7 +38,6 @@ def makeTree(m, pos=Vector(0, -2, 0), size=2, a=0, f=0):
 		makeTree(m, pos, size/1.8, a+np.pi*0.257, f)
 		makeTree(m, pos, size/1.8, a-np.pi*0.257, f)
 
-
 mesh = Mesh()
 def run():
 	path = '3d files/'
@@ -68,135 +63,124 @@ def run():
 		choice = input('> ');
 	mesh.loadMesh('3d files/'+objects[int(choice)]+'.obj')
 run()
-mesh.set_global(Vector(0,0,0), Vector(0,0,0))
-# mesh = Mesh()
-# makeTree(mesh)
-# rotate_points
-# mesh = Mesh('3d files/teapot.obj')
-# mesh = Mesh('3d files/dt6.obj')
-# mesh.transform(get_rotation_matrix(
-# 	np.pi*2*0.25
-# 	))
-# mesh = Mesh('3d files/penguin.obj')
-# mesh = Mesh('3d files/sword.obj')
-# mesh = Mesh('3d files/sword1.obj')
-# mesh.transform(get_rotation_matrix(0, np.pi/2))
-# mesh = Mesh('3d files/cubetree.obj')
-# mesh = Mesh('3d files/suzanne.obj')
-# mesh = Mesh('3d files/ufo.obj')
-# mesh = Mesh('3d files/computer with materials.obj')
-# mesh.translate(np.array([
-# 	[0.75,0,0,0.35],
-# 	[0,0.75,0,0],
-# 	[0,0,0.75,0]
-# ]))
+mesh.set_global_transform(Vector(0,0,0), Vector(0,0,0))
 # mesh = Mesh(sys.argv[1])
 
 class main:
 	def __init__(self):
-
-		self.setup();
-	def setup(self):
+		# frame counter
 		self.frame = 0
-		self.screen = turtle.Screen()
-		self.screen.setup(600, 600)
-		self.screen.colormode(255)
-		self.t = turtle.Turtle()
-		self.t.speed(0)
-		self.t.up()
-		self.t.ht();
-		self.screen.tracer(0)
-
-		self.mouse = Vector()
-	# -- camera --
-		self.camera = Vector(0, 0, 0)
+		# this is a class that wraps the turtle and turtle.screen
+		self.canvas = window.Screen()
+		# a vactor for keeping track of the mouse position
+		self.mouse = Vector() # not implemented yet
+		# a vector that holds the position of the camera
+		self.camera = Vector(0, 0, 0) # camera movement and rotation not implemented yet
+		# a variable that is used in the projection matrix calculations
 		self.distance = 3
+		# a variable that is used for upscaling the projected objects to the screen size
 		self.scl = 800;
-	# -- lights -- 
-		self.lights = np.array([[1.5, 1.5, 1.5]])#, [-2., 2., 2.]])
-		self.light_colors = np.array([[170., 160., 130.]])#np.array([[252., 171., 106.]])#,[0., 100., 100.]])
-	# -- main loop --
-		self.screen.listen()
+		# -- lights --
+		# an array that holds different point lights
+		self.lights = [] # you can have as many point lights as you want
+		self.lights.append( Point_light( Vector(2, 2, 2), Vector(1,.95,.9), 2. ) )
+		# self.lights.append( Point_light( Vector(2, 2, 2), Vector(1,.95,.9), 1. ) )
+		# -- main loop --
 		self.run()
 
+	# event that needs to get called every time the mouse is dragged over the window
 	def dragged(self, x, y):
-		print(x, y)
-		if self.mouse.y-y/300.**2+self.mouse.x-x/500.**2 < 0.1:
-			mesh.rotation.x +=  (self.mouse.y-y/300.)
-			mesh.rotation.y += -(self.mouse.x-x/500.)
+		# last time I tried this with janky mouse input, it worked. but If you
+		# have any improvement suggestions, please!
+		mesh.rotation.x +=  (self.mouse.y-y/300.)
+		mesh.rotation.y += -(self.mouse.x-x/500.)
 		self.mouse = Vector(x/500, y/300, 0)
 
+	# this method gets called preferably every frame
 	def update(self):
+		# increment the value of the frame counter variable
 		self.frame+=1
+		# rotate the mesh 1/100 of full rotation in the y axis (roll)
 		mesh.transform(get_rotation_matrix(
 			0, np.pi*2*0.01
-			))
-		pass
+		))
 
+	# this method returns the position of the lights and the faces of the mesh
+	# after projection
 	def get_world_mesh(self):
-		lights = self.lights[:]
-		project(lights, self.distance)
-		# getting faces from every mesh
-		faces = mesh.get_faces(self.distance)
-		# filtering every mesh separatley
+		# copy the positions of the point lights to a new variable
+		lights = [l.get_projected() for l in self.lights]
+		# get projected faces of the mesh
+		faces = mesh.get_projected_faces(self.distance)
+		# filter the faces depending on their normal's Z value
 		faces = [f for f in faces if f[3].z > 0]
 		return (lights, faces)
 
-
 	def draw_mesh_fast(self, shaded=True):
-		self.background('black')
-		self.t.clear()
+		# clear the bcakground and color it black
+		self.canvas.bgcolor('black')
+		self.canvas.clear()
 
+		# get positions of lights and faces of the mesh
 		lights, faces = self.get_world_mesh()
+		# sort faces depending on their z value
 		faces.sort(key=lambda a:(Vector.average(a[:3])-Vector(0, 0, -3)).magSq())
+		# loop ofer faces
 		for f in faces:
-			shade_col, bg_col = tuple(self.get_face_color(f, lights)) if shaded else (255,255,255), self.t.screen.bgcolor()
+			# get the ilumination of the face
+			shade_col = tuple(self.get_face_color(f, lights)) if shaded else (255,255,255)
+			# get the background color of the canvas
+			bg_col = self.canvas.bgcolor()
 
-			fill_col = shade_col
-			stroke_col = bg_col
+			# set fill and stroke colors
+			self.canvas.fill(		shade_col		)
+			self.canvas.stroke(		shade_col		)
 
-			self.t.color(stroke_col,fill_col)
-			self.drawFace(f, stroke=False, fill=True)
-		self.t.screen.update()
+			# command the canvas to draw the face with the specified parameters
+			self.canvas.drawPolygon(f[:-2], self.scl, stroke=True, fill=True)
+
+		# update the canvas
+		self.canvas.update()
+		# update the objects
 		self.update()
 
 	def get_face_color(self, face, lights):
+		# get the original color of the face and than un-normalize it
 		shade_col = face[-1]*127
 
-		for i in range(len(lights)):
-			dot = float((Vector(self.lights[i])-face[0]).norm_dot(face[-2]))
+		# loop over every point light
+		for light in self.lights:
+			light_pos = light.get_projected()
+			# get the dot product of the normal of the face and the direction of
+			# the light from the face
+			dot = float((light_pos-face[0]).norm_dot(face[-2]))
+			# if the normal of the face is facing more than π/2, light shouldn't
+			# illuminate the face
 			if dot > 0:
-				d = 1/distSq(face[0].get_coords(),lights[i])
-				shade_col += (Vector(self.light_colors[i])*float(d))*(dot*.5+.5)
+				# get the inverse square of the distance from the face to the poin light
+				d = 1/distSq(face[0],light_pos)
+				# add the color of the light multiplied by the iverse of the distance to
+				# the point light and the dot
+				shade_col += (light.col*float(d))*((dot*.5+.5)*light.val*255)
 
+		# turn the color vector into a int vector and limit it from 0 to 255
 		col = [*map(lambda a:min(max(0, int(a)), 255),shade_col.get_coords())]
+		# return a tuple of the color
 		return (col[0], col[1], col[2])
-			
 
-	def stroke(self, col):
-		self.t.pencolor(col)
-
-	def fill(self, col):
-		self.t.fillcolor(col)
-
-	def background(self, col):
-		self.screen.bgcolor(col)
-
-	def drawFace(self, face, stroke=False, fill=True):
-		self.t.goto(face[0][0]*self.scl, face[0][1]*self.scl)
-		if fill: self.t.begin_fill();
-		if stroke: self.t.down();
-		for i in range(1,len(face)-2):
-			self.t.goto(face[i][0]*self.scl, face[i][1]*self.scl)
-		self.t.goto(face[0][0]*self.scl, face[0][1]*self.scl)
-		if stroke: self.t.up();
-		if fill: self.t.end_fill();
-
+	# main loop
 	def run(self):
-		for i in range(10000):
+		# I don'n run the loop infinitley because in the case of an error,
+		# I wan't the program to finish by itself, even if it takes a long time
+		for i in range(1000):
+			# start the timer
 			st = time.time()
+			# run the draw function
 			self.draw_mesh_fast(shaded=True)
+			# stop the timer
 			et = time.time()
+			# print the fps
 			print('FPS = '+str(round(1/(et-st)*100)/100),end='\r')
 
+# run the main environment
 m = main();

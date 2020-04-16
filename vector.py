@@ -118,6 +118,16 @@ class Vector:
 		
 		else:
 			raise TypeError('Vector can\'t be multiplied by '+str(type(other)))
+
+	def __div__(self, other):
+		if type(other) == int or type(other) == float:
+			vec = self.copy()
+			vec.x /= other
+			vec.y /= other
+			vec.z /= other
+			return vec
+		else:
+			raise TypeError('Vector can\'t be divided by '+str(type(other)))
 	
 	def __str__(self):
 
@@ -146,6 +156,17 @@ class Vector:
 		m = vec.mag()
 		vec.setMag(m/len(vectors))
 		return vec
+
+	def __iter__(self):
+		self.iter_counter = 3
+		return self
+	
+	def __next__(self):
+		self.iter_counter -= 1
+		if self.iter_counter == 0:
+			raise StopIteration
+		return self[2-self.iter_counter]
+
 
 
 
@@ -177,7 +198,7 @@ def project(ps, distance=5):
 		ps[i] = mat.dot(ps[i])
 
 def distSq(p1, p2):
-	return sum([n**2 for n in np.array(p1)-p2])
+	return sum([n**2 for n in p1-p2])
 
 
 # -- test cases -- 

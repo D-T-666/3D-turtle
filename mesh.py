@@ -12,10 +12,11 @@ class Mesh:
 		if file!=False:
 			self.loadMesh(file)
 		
+		self.verts = self.get_projected()
 		# print(self.faces)
 		# print(self.verts)
 
-	def set_global(self, position=Vector(), rotation=Vector()):
+	def set_global_transform(self, position=Vector(), rotation=Vector()):
 		self.position = position
 		self.rotation = rotation
 
@@ -68,7 +69,7 @@ class Mesh:
 			verts[i] = mat.dot(verts[i].get_coords())
 		return verts
 
-	def get_faces(self, distance):
+	def get_projected_faces(self, distance):
 		verts = []
 		if distance > 0:
 			verts = self.get_projected(distance)
