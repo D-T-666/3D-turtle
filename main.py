@@ -74,17 +74,17 @@ class main:
 		self.canvas = window.Screen()
 		# a vactor for keeping track of the mouse position
 		self.mouse = Vector() # not implemented yet
-		# a vector that holds the position of the camera
-		self.camera = Vector(0, 0, 0) # camera movement and rotation not implemented yet
 		# a variable that is used in the projection matrix calculations
 		self.distance = 3
+		# a vector that holds the position of the camera
+		self.camera = Vector(0, 0, -self.distance) # camera movement and rotation not implemented yet
 		# a variable that is used for upscaling the projected objects to the screen size
 		self.scl = 800;
 		# -- lights --
 		# an array that holds different point lights
 		self.lights = [] # you can have as many point lights as you want
-		self.lights.append( Point_light( Vector(2, 2, 2), Vector(1,.95,.9), 2. ) )
-		# self.lights.append( Point_light( Vector(2, 2, 2), Vector(1,.95,.9), 1. ) )
+		self.lights.append( Point_light( Vector(2, 2, 2), Vector(1,.95,.5), 5. ) )
+		# self.lights.append( Point_light( Vector(-2, 2, 2), Vector(.5,.75,.1), 5. ) )
 		# -- main loop --
 		self.run()
 
@@ -104,31 +104,35 @@ class main:
 		mesh.transform(get_rotation_matrix(
 			0, np.pi*2*0.01
 		))
+		# set the position and the rotation of the mesh to the slider values
+		control_vars = self.canvas.control.get_vars()
+		mesh.set_global_transform(Vector(control_vars[:3]), Vector(control_vars[3:6]))
 
 	# this method returns the position of the lights and the faces of the mesh
 	# after projection
 	def get_world_mesh(self):
-		# copy the positions of the point lights to a new variable
-		lights = [l.get_projected() for l in self.lights]
 		# get projected faces of the mesh
 		faces = mesh.get_projected_faces(self.distance)
 		# filter the faces depending on their normal's Z value
 		faces = [f for f in faces if f[3].z > 0]
-		return (lights, faces)
+		return faces
 
 	def draw_mesh_fast(self, shaded=True):
 		# clear the bcakground and color it black
 		self.canvas.bgcolor('black')
 		self.canvas.clear()
 
+		# control settings
+		control_vars = self.canvas.control.get_vars()
+
 		# get positions of lights and faces of the mesh
-		lights, faces = self.get_world_mesh()
+		faces = self.get_world_mesh()
 		# sort faces depending on their z value
-		faces.sort(key=lambda a:(Vector.average(a[:3])-Vector(0, 0, -3)).magSq())
+		faces.sort(key=lambda a:(Vector.average(a[:3])-self.camera).magSq())
 		# loop ofer faces
 		for f in faces:
 			# get the ilumination of the face
-			shade_col = tuple(self.get_face_color(f, lights)) if shaded else (255,255,255)
+			shade_col = tuple(self.get_face_color(f)) if shaded else (255,255,255)
 			# get the background color of the canvas
 			bg_col = self.canvas.bgcolor()
 
@@ -137,16 +141,16 @@ class main:
 			self.canvas.stroke(		shade_col		)
 
 			# command the canvas to draw the face with the specified parameters
-			self.canvas.drawPolygon(f[:-2], self.scl, stroke=True, fill=True)
+			self.canvas.drawPolygon(f[:-2], self.scl, stroke=control_vars[6]==1, fill=control_vars[7]==1)
 
 		# update the canvas
 		self.canvas.update()
 		# update the objects
 		self.update()
 
-	def get_face_color(self, face, lights):
+	def get_face_color(self, face):
 		# get the original color of the face and than un-normalize it
-		shade_col = face[-1]*127
+		shade_col = face[-1]*191
 
 		# loop over every point light
 		for light in self.lights:

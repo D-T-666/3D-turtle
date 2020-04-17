@@ -1,4 +1,5 @@
 import turtle
+from controlpanel import Control_panel
 
 class Screen:
 	def __init__(self, size_x=600, size_y=600):
@@ -9,8 +10,12 @@ class Screen:
 		self.t.speed(0)
 		self.t.up()
 		self.t.ht();
+
+		self.control = Control_panel()
+		turtle._root = self.control.get_root()
+
 		self.screen.tracer(0)
-	
+		
 	def update(self):
 		self.t.screen.update()
 
