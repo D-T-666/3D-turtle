@@ -1,12 +1,6 @@
 from tkinter import *
-from tkinter import font as tkFont
 
-pi = 14159
-
-
-# I'll be back soon!
-
-
+pi = 3.14159
 
 class Control_panel:
 	def __init__(self):
@@ -35,13 +29,13 @@ class Control_panel:
 		# checkboxes
 		self.v_stroke = False
 		self.v_fill = False
-		self.c_stroke = Checkbutton(self.root, text="stroke", command=self.stroke_changed)
-		self.c_fill = Checkbutton(self.root, text="fill", command=self.fill_changed)
-		self.c_stroke.grid(column=0, row=12, sticky=W)
-		self.c_fill.grid(column=0, row=12, sticky=E)
+		self.b_stroke = Button(self.root, text="stroke", command=self.stroke_changed)
+		self.b_fill = Button(self.root, text="fill", command=self.fill_changed)
+		self.b_stroke.grid(column=0, row=12, sticky=W)
+		self.b_fill.grid(column=0, row=12, sticky=E)
 
 	def create_text(self, text='###', row=0, col=0):
-		Label(self.root, text=text).grid(row=row, column=col)
+		Label(self.root, text=text, font=("Consolas", 14, "normal")).grid(row=row, column=col)
 
 	def stroke_changed(self):
 		self.v_stroke = not self.v_stroke

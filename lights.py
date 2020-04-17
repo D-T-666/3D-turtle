@@ -1,10 +1,5 @@
 from vector import *
 
-# class Positional_light:
-# 	def __init__(self, pos=Vector(), col=Vector(), val=1.):
-# 		self.pos, self.col, self.val = pos, col, val
-
-
 
 class Point_light:
 	def __init__(self, pos=Vector(), col=Vector(), val=1.):

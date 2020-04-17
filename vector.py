@@ -132,6 +132,7 @@ class Vector:
 	def __str__(self):
 
 		return f'x: {self.x}\ny: {self.y}\nz: {self.z}\n';
+
 	def __getitem__(self,ind):
 		if ind == 0:
 			return self.x
@@ -139,6 +140,7 @@ class Vector:
 			return self.y
 		if ind == 2:
 			return self.z
+
 	def __setitem__(self,index,value):
 		if ind == 0:
 			self.x = value
@@ -146,6 +148,7 @@ class Vector:
 			self.y = value
 		if ind == 2:
 			self.z = value
+
 	def __len__(self):
 		return 3
 
@@ -166,9 +169,6 @@ class Vector:
 		if self.iter_counter == 0:
 			raise StopIteration
 		return self[2-self.iter_counter]
-
-
-
 
 def get_rotation_matrix(x=0,y=0,z=0):
 	rot_mat = np.array([[1.0 if j == i else 0.0 for j in range(3)] for i in range(3)])
@@ -198,39 +198,4 @@ def project(ps, distance=5):
 		ps[i] = mat.dot(ps[i])
 
 def distSq(p1, p2):
-	return sum([n**2 for n in p1-p2])
-
-
-# -- test cases -- 
-# everything works!!!! :D
-
-# # test 1
-# print(Vector())
-# # test 2
-# print(Vector(0,0,0))
-# # test 3
-# print(Vector(np.array([0,1,6])))
-# # test 4
-# v = Vector(np.array([0,1,6]))
-# v *= np.array([[0,1,6], [-1, 2, 0], [-1, 2, 0]])
-# print(v)
-# # test 5
-# v = Vector(np.array([0,0,4]))
-# print(v.normalized())
-# print(v)
-# # test 6
-# v.setMag(6)
-# print(v)
-# # test 7
-# print(v.mag())
-# print(v.magSq())
-# # test 8
-# print(Vector(2, 3, -1)[0])
-# print(Vector(2, 3, -1)[1])
-# print(Vector(2, 3, -1)[2])
-# # test 9
-# print(Vector(2, 3, -1).get_coords())
-# # test 10
-# print(Vector(Vector()))
-# # test 11
-# print(Vector()*'string')
+	return sum(n**2 for n in p1-p2)

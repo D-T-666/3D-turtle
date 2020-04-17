@@ -176,7 +176,7 @@ class main:
 	def run(self):
 		# I don'n run the loop infinitley because in the case of an error,
 		# I wan't the program to finish by itself, even if it takes a long time
-		for i in range(1000):
+		for i in range(10000):
 			# start the timer
 			st = time.time()
 			# run the draw function
